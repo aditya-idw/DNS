@@ -14,12 +14,37 @@
       --idw-bg: #fcfcfc;
       --idw-accent: #2500df;
     }
-    body { background: var(--idw-bg); color: var(--idw-dark); font-family: 'Open Sans', sans-serif; }
-    .container { max-width: 960px; }
-    .btn-primary { background-color: var(--idw-primary); border-color: var(--idw-primary); }
-    .btn-primary:hover { background-color: var(--idw-accent); border-color: var(--idw-accent); }
-    h1 { display: flex; align-items: center; gap: 0.5rem; color: var(--idw-dark); }
-    #filters label { font-weight: 600; }
+
+    body {
+      background: var(--idw-bg);
+      color: var(--idw-dark);
+      font-family: 'Open Sans', sans-serif;
+    }
+
+    .container {
+      max-width: 960px;
+    }
+
+    .btn-primary {
+      background-color: var(--idw-primary);
+      border-color: var(--idw-primary);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--idw-accent);
+      border-color: var(--idw-accent);
+    }
+
+    h1 {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--idw-dark);
+    }
+
+    #filters label {
+      font-weight: 600;
+    }
   </style>
   <!-- Bootstrap & DataTables CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
@@ -35,13 +60,17 @@
     </h1>
     <form id="lookupForm" class="row g-3 mb-4">
       <div class="col-md-6">
-        <input type="text" id="domainInput" class="form-control" placeholder="Enter domain (e.g., example.com)" required />
+        <input type="text" id="domainInput" class="form-control" placeholder="Enter domain (e.g., example.com)"
+          required />
       </div>
       <div class="col-auto">
         <button type="submit" class="btn btn-primary">Lookup</button>
       </div>
     </form>
-    <div id="loading" class="text-center my-4" style="display:none;"><div class="spinner-border text-primary" role="status"></div><p>Fetching data...</p></div>
+    <div id="loading" class="text-center my-4" style="display:none;">
+      <div class="spinner-border text-primary" role="status"></div>
+      <p>Fetching data...</p>
+    </div>
     <div class="row mb-3" id="actions" style="display:none;">
       <div class="col-auto">
         <button id="downloadCsv" class="btn btn-secondary me-2">Download CSV</button>
@@ -50,12 +79,36 @@
       </div>
     </div>
     <div class="row mb-3" id="filters" style="display:none;">
-      <div class="col-auto"><label for="typeFilter">Filter by record type:</label><select id="typeFilter" class="form-select"><option value="">All Types</option></select></div>
-      <div class="col-auto"><label for="hostFilter">Filter by host:</label><select id="hostFilter" class="form-select"><option value="">All Hosts</option></select></div>
-      <div class="col-auto"><label for="groupBy">Group by:</label><select id="groupBy" class="form-select"><option value="1">Record Type</option><option value="0">Host</option></select></div>
-      <div class="col-auto"><label for="sortBy">Sort by:</label><select id="sortBy" class="form-select"><option value="0:asc">Host ↑</option><option value="0:desc">Host ↓</option><option value="1:asc">Type ↑</option><option value="1:desc">Type ↓</option><option value="2:asc">Records ↑</option><option value="2:desc">Records ↓</option></select></div>
+      <div class="col-auto"><label for="typeFilter">Filter by record type:</label><select id="typeFilter"
+          class="form-select">
+          <option value="">All Types</option>
+        </select></div>
+      <div class="col-auto"><label for="hostFilter">Filter by host:</label><select id="hostFilter" class="form-select">
+          <option value="">All Hosts</option>
+        </select></div>
+      <div class="col-auto"><label for="groupBy">Group by:</label><select id="groupBy" class="form-select">
+          <option value="1">Record Type</option>
+          <option value="0">Host</option>
+        </select></div>
+      <div class="col-auto"><label for="sortBy">Sort by:</label><select id="sortBy" class="form-select">
+          <option value="0:asc">Host ↑</option>
+          <option value="0:desc">Host ↓</option>
+          <option value="1:asc">Type ↑</option>
+          <option value="1:desc">Type ↓</option>
+          <option value="2:asc">Records ↑</option>
+          <option value="2:desc">Records ↓</option>
+        </select></div>
     </div>
-    <table id="resultsTable" class="table table-striped" style="width:100%; display:none;"><thead><tr><th>Host</th><th>Type</th><th>Records</th></tr></thead><tbody></tbody></table>
+    <table id="resultsTable" class="table table-striped" style="width:100%; display:none;">
+      <thead>
+        <tr>
+          <th>Host</th>
+          <th>Type</th>
+          <th>Records</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
     <p class="text-muted mt-3">Enter the domain you want to look up</p>
   </div>
 
@@ -67,9 +120,10 @@
   <script src="https://cdn.datatables.net/rowgroup/1.3.1/js/dataTables.rowGroup.min.js"></script>
 
   <script>
+    window.jsPDF = window.jspdf.jsPDF;
     let table, allResults = [], currentDomain = '';
     async function fetchJSON(url) { const resp = await fetch(url); if (!resp.ok) throw new Error(resp.statusText); return resp.json(); }
-    async function dohResolve(host, type) { const resp = await fetch(`https://cloudflare-dns.com/dns-query?name=${host}&type=${type}`, {headers:{'Accept':'application/dns-json'}}); if(!resp.ok) throw new Error(resp.statusText); const d = await resp.json(); return d.Answer? d.Answer.map(a=>a.data):[]; }
+    async function dohResolve(host, type) { const resp = await fetch(`https://cloudflare-dns.com/dns-query?name=${host}&type=${type}`, { headers: { 'Accept': 'application/dns-json' } }); if (!resp.ok) throw new Error(resp.statusText); const d = await resp.json(); return d.Answer ? d.Answer.map(a => a.data) : []; }
 
     $(document).ready(() => {
       // URL param handling must come before form submit binding
@@ -88,14 +142,14 @@
       try {
         const crt = await fetchJSON(`https://crt.sh/?q=%25.${currentDomain}&output=json`);
         const hosts = [...new Set(crt.flatMap(e => e.name_value.split('\n')).concat(currentDomain))];
-        const types = ['A','AAAA','CNAME','MX','TXT','NS','SRV','CAA','SOA'];
+        const types = ['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'NS', 'SRV', 'CAA', 'SOA'];
         allResults = [];
         for (const h of hosts) {
           for (const t of types) {
             try {
               const recs = await dohResolve(h, t);
               if (recs.length) allResults.push({ host: h, type: t, records: recs.join(', ') });
-            } catch {};
+            } catch { };
           }
         }
         $('#loading').hide();
@@ -106,8 +160,8 @@
           table = $('#resultsTable').DataTable({
             data,
             columns: [{ title: 'Host' }, { title: 'Type' }, { title: 'Records' }],
-            lengthMenu: [[10,25,50,-1],[10,25,50,'All']],
-            order: [[1,'asc']],
+            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, 'All']],
+            order: [[1, 'asc']],
             rowGroup: { dataSrc: parseInt($('#groupBy').val()) }
           });
           tlist.forEach(t => $('#typeFilter').append(`<option value="${t}">${t}</option>`));
@@ -115,7 +169,7 @@
           $('#typeFilter').on('change', () => table.column(1).search($('#typeFilter').val()).draw());
           $('#hostFilter').on('change', () => table.column(0).search($('#hostFilter').val()).draw());
           $('#groupBy').on('change', () => { table.rowGroup().dataSrc(parseInt($('#groupBy').val())); table.draw(); });
-          $('#sortBy').on('change', () => { const [c,d] = $('#sortBy').val().split(':'); table.order([[parseInt(c), d]]).draw(); });
+          $('#sortBy').on('change', () => { const [c, d] = $('#sortBy').val().split(':'); table.order([[parseInt(c), d]]).draw(); });
         } else {
           table.clear().rows.add(data).draw();
         }
